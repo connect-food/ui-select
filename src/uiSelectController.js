@@ -297,13 +297,17 @@ uis.controller('uiSelectCtrl',
         $timeout.cancel(_refreshDelayPromise);
       }
       ctrl.preRefreshing = true;
+      console.log('Pre-refresh = ' + ctrl.preRefreshing);
       _refreshDelayPromise = $timeout(function() {
         var refreshPromise =  $scope.$eval(refreshAttr);
         if (refreshPromise && angular.isFunction(refreshPromise.then) && !ctrl.refreshing) {
           ctrl.preRefreshing = false;
+          console.log('Pre-refresh = ' + ctrl.preRefreshing);
           ctrl.refreshing = true;
+          console.log('Refresh = ' + ctrl.refreshing);
           refreshPromise.finally(function() {
             ctrl.refreshing = false;
+            console.log('Refresh = ' + ctrl.refreshing);
           });
       }}, ctrl.refreshDelay);
     }
@@ -581,14 +585,20 @@ uis.controller('uiSelectCtrl',
         }
         break;
       case KEY.TAB:
+        console.log('Tab hit. Refresh = ' + ctrl.refreshing + ', preRefresh = ' + ctrl.preRefreshing);
+
         if (ctrl.refreshing || ctrl.preRefreshing) {
+          console.log('Closing!!!');
           ctrl.close();
           return processed;
         }
+        console.log('Doing tab stuff...');
         if (!ctrl.multiple || ctrl.open) ctrl.select(ctrl.items[ctrl.activeIndex], true);
         break;
       case KEY.ENTER:
+        console.log('Enter hit. Refresh = ' + ctrl.refreshing + ', preRefresh = ' + ctrl.preRefreshing);
         if (ctrl.refreshing || ctrl.preRefreshing) { return processed; }
+        console.log('Doing enter stuff...');
         if(ctrl.open && (ctrl.tagging.isActivated || ctrl.activeIndex >= 0)){
           ctrl.select(ctrl.items[ctrl.activeIndex], ctrl.skipFocusser); // Make sure at least one dropdown item is highlighted before adding if not in tagging mode
         } else {
