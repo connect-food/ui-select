@@ -296,9 +296,11 @@ uis.controller('uiSelectCtrl',
       if (_refreshDelayPromise) {
         $timeout.cancel(_refreshDelayPromise);
       }
+      ctrl.preRefreshing = true;
       _refreshDelayPromise = $timeout(function() {
         var refreshPromise =  $scope.$eval(refreshAttr);
         if (refreshPromise && angular.isFunction(refreshPromise.then) && !ctrl.refreshing) {
+          ctrl.preRefreshing = false;
           ctrl.refreshing = true;
           refreshPromise.finally(function() {
             ctrl.refreshing = false;
@@ -579,9 +581,14 @@ uis.controller('uiSelectCtrl',
         }
         break;
       case KEY.TAB:
+        if (ctrl.refreshing || ctrl.preRefreshing) {
+          ctrl.close();
+          return processed;
+        }
         if (!ctrl.multiple || ctrl.open) ctrl.select(ctrl.items[ctrl.activeIndex], true);
         break;
       case KEY.ENTER:
+        if (ctrl.refreshing || ctrl.preRefreshing) { return processed; }
         if(ctrl.open && (ctrl.tagging.isActivated || ctrl.activeIndex >= 0)){
           ctrl.select(ctrl.items[ctrl.activeIndex], ctrl.skipFocusser); // Make sure at least one dropdown item is highlighted before adding if not in tagging mode
         } else {
