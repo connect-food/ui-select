@@ -296,18 +296,17 @@ uis.controller('uiSelectCtrl',
       if (_refreshDelayPromise) {
         $timeout.cancel(_refreshDelayPromise);
       }
-      ctrl.preRefreshing = true;
-      console.log('Pre-refresh = ' + ctrl.preRefreshing);
+      ctrl.fullRefreshing = true;
+      console.log('Pre-refresh = ' + ctrl.fullRefreshing);
       _refreshDelayPromise = $timeout(function() {
         var refreshPromise =  $scope.$eval(refreshAttr);
         if (refreshPromise && angular.isFunction(refreshPromise.then) && !ctrl.refreshing) {
-          ctrl.preRefreshing = false;
-          console.log('Pre-refresh = ' + ctrl.preRefreshing);
           ctrl.refreshing = true;
           console.log('Refresh = ' + ctrl.refreshing);
           refreshPromise.finally(function() {
+            ctrl.fullRefreshing = false;
             ctrl.refreshing = false;
-            console.log('Refresh = ' + ctrl.refreshing);
+            console.log('Both Refresh = ' + ctrl.refreshing);
           });
       }}, ctrl.refreshDelay);
     }
@@ -562,7 +561,8 @@ uis.controller('uiSelectCtrl',
     });
   };
 
-  function _handleDropDownSelection(key) {
+  function _handleDropDownSelection(e) {
+    var key = e.which;
     var processed = true;
     switch (key) {
       case KEY.DOWN:
@@ -585,19 +585,19 @@ uis.controller('uiSelectCtrl',
         }
         break;
       case KEY.TAB:
-        console.log('Tab hit. Refresh = ' + ctrl.refreshing + ', preRefresh = ' + ctrl.preRefreshing);
+        console.log('Tab hit. Refresh = ' + ctrl.refreshing + ', fullRefreshing = ' + ctrl.fullRefreshing);
 
-        if (ctrl.refreshing || ctrl.preRefreshing) {
-          console.log('Closing!!!');
-          ctrl.close();
+        if (ctrl.refreshing || ctrl.fullRefreshing) {
+          console.log('Clearing!!!');
+          ctrl.clear(e);
           return processed;
         }
         console.log('Doing tab stuff...');
         if (!ctrl.multiple || ctrl.open) ctrl.select(ctrl.items[ctrl.activeIndex], true);
         break;
       case KEY.ENTER:
-        console.log('Enter hit. Refresh = ' + ctrl.refreshing + ', preRefresh = ' + ctrl.preRefreshing);
-        if (ctrl.refreshing || ctrl.preRefreshing) { return processed; }
+        console.log('Enter hit. Refresh = ' + ctrl.refreshing + ', fullRefreshing = ' + ctrl.fullRefreshing);
+        if (ctrl.refreshing || ctrl.fullRefreshing) { return processed; }
         console.log('Doing enter stuff...');
         if(ctrl.open && (ctrl.tagging.isActivated || ctrl.activeIndex >= 0)){
           ctrl.select(ctrl.items[ctrl.activeIndex], ctrl.skipFocusser); // Make sure at least one dropdown item is highlighted before adding if not in tagging mode
@@ -629,7 +629,7 @@ uis.controller('uiSelectCtrl',
       var tagged = false;
 
       if (ctrl.items.length > 0 || ctrl.tagging.isActivated) {
-        if(!_handleDropDownSelection(key) && !ctrl.searchEnabled) {
+        if(!_handleDropDownSelection(e) && !ctrl.searchEnabled) {
           e.preventDefault();
           e.stopPropagation();
         }
