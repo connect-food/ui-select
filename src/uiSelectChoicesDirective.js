@@ -77,9 +77,8 @@ uis.directive('uiSelectChoices',
 
         scope.$watch('$select.open', function(open) {
           if (open) {
-            $select.refresh(attrs.refresh).then(function() {
-              tElement.attr('role', 'listbox');
-            });
+            tElement.attr('role', 'listbox');
+            $select.refresh(attrs.refresh);
           } else {
             element.removeAttr('role');
           }

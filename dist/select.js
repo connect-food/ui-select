@@ -1,7 +1,7 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
- * Version: 0.19.6 - 2017-02-22T21:51:57.399Z
+ * Version: 0.19.6 - 2017-02-22T21:57:03.604Z
  * License: MIT
  */
 
@@ -259,9 +259,8 @@ uis.directive('uiSelectChoices',
 
         scope.$watch('$select.open', function(open) {
           if (open) {
-            $select.refresh(attrs.refresh).then(function() {
-              tElement.attr('role', 'listbox');
-            });
+            tElement.attr('role', 'listbox');
+            $select.refresh(attrs.refresh);
           } else {
             element.removeAttr('role');
           }
@@ -573,16 +572,13 @@ uis.controller('uiSelectCtrl',
       $timeout.cancel(_refreshDelayPromise);
     }
     ctrl.fullRefreshing = true;
-    console.log('Pre-refresh = ' + ctrl.fullRefreshing);
     _refreshDelayPromise = $timeout(function() {
       var refreshPromise =  $scope.$eval(refreshAttr);
       if (refreshPromise && angular.isFunction(refreshPromise.then) && !ctrl.refreshing) {
         ctrl.refreshing = true;
-        console.log('Refresh = ' + ctrl.refreshing);
         return refreshPromise.finally(function() {
           ctrl.fullRefreshing = false;
           ctrl.refreshing = false;
-          console.log('Both Refresh = ' + ctrl.refreshing);
         });
       }
     }, ctrl.refreshDelay);
@@ -862,20 +858,14 @@ uis.controller('uiSelectCtrl',
         }
         break;
       case KEY.TAB:
-        console.log('Tab hit. Refresh = ' + ctrl.refreshing + ', fullRefreshing = ' + ctrl.fullRefreshing);
-
         if (ctrl.refreshing || ctrl.fullRefreshing) {
-          console.log('Clearing!!!');
           ctrl.clear(e);
           return processed;
         }
-        console.log('Doing tab stuff...');
         if (!ctrl.multiple || ctrl.open) ctrl.select(ctrl.items[ctrl.activeIndex], true);
         break;
       case KEY.ENTER:
-        console.log('Enter hit. Refresh = ' + ctrl.refreshing + ', fullRefreshing = ' + ctrl.fullRefreshing);
         if (ctrl.refreshing || ctrl.fullRefreshing) { return processed; }
-        console.log('Doing enter stuff...');
         if(ctrl.open && (ctrl.tagging.isActivated || ctrl.activeIndex >= 0)){
           ctrl.select(ctrl.items[ctrl.activeIndex], ctrl.skipFocusser); // Make sure at least one dropdown item is highlighted before adding if not in tagging mode
         } else {
