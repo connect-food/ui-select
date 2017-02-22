@@ -5,8 +5,8 @@
  * put as much logic in the controller (instead of the link functions) as possible so it can be easily tested.
  */
 uis.controller('uiSelectCtrl',
-  ['$scope', '$element', '$timeout', '$filter', '$$uisDebounce', 'uisRepeatParser', 'uiSelectMinErr', 'uiSelectConfig', '$parse', '$injector', '$window',
-  function($scope, $element, $timeout, $filter, $$uisDebounce, RepeatParser, uiSelectMinErr, uiSelectConfig, $parse, $injector, $window) {
+  ['$scope', '$element', '$timeout', '$filter', '$$uisDebounce', 'uisRepeatParser', 'uiSelectMinErr', 'uiSelectConfig', '$parse', '$injector', '$window', '$q',
+  function($scope, $element, $timeout, $filter, $$uisDebounce, RepeatParser, uiSelectMinErr, uiSelectConfig, $parse, $injector, $window, $q) {
 
   var ctrl = this;
 
@@ -289,27 +289,31 @@ uis.controller('uiSelectCtrl',
    * See Expose $select.search for external / remote filtering https://github.com/angular-ui/ui-select/pull/31
    */
   ctrl.refresh = function(refreshAttr) {
-    if (refreshAttr !== undefined) {
-      // Debounce
-      // See https://github.com/angular-ui/bootstrap/blob/0.10.0/src/typeahead/typeahead.js#L155
-      // FYI AngularStrap typeahead does not have debouncing: https://github.com/mgcrea/angular-strap/blob/v2.0.0-rc.4/src/typeahead/typeahead.js#L177
-      if (_refreshDelayPromise) {
-        $timeout.cancel(_refreshDelayPromise);
-      }
-      ctrl.fullRefreshing = true;
-      console.log('Pre-refresh = ' + ctrl.fullRefreshing);
-      _refreshDelayPromise = $timeout(function() {
-        var refreshPromise =  $scope.$eval(refreshAttr);
-        if (refreshPromise && angular.isFunction(refreshPromise.then) && !ctrl.refreshing) {
-          ctrl.refreshing = true;
-          console.log('Refresh = ' + ctrl.refreshing);
-          refreshPromise.finally(function() {
-            ctrl.fullRefreshing = false;
-            ctrl.refreshing = false;
-            console.log('Both Refresh = ' + ctrl.refreshing);
-          });
-      }}, ctrl.refreshDelay);
+    if (refreshAttr === undefined) {
+      return $q.resolve();
     }
+
+    // Debounce
+    // See https://github.com/angular-ui/bootstrap/blob/0.10.0/src/typeahead/typeahead.js#L155
+    // FYI AngularStrap typeahead does not have debouncing: https://github.com/mgcrea/angular-strap/blob/v2.0.0-rc.4/src/typeahead/typeahead.js#L177
+    if (_refreshDelayPromise) {
+      $timeout.cancel(_refreshDelayPromise);
+    }
+    ctrl.fullRefreshing = true;
+    console.log('Pre-refresh = ' + ctrl.fullRefreshing);
+    _refreshDelayPromise = $timeout(function() {
+      var refreshPromise =  $scope.$eval(refreshAttr);
+      if (refreshPromise && angular.isFunction(refreshPromise.then) && !ctrl.refreshing) {
+        ctrl.refreshing = true;
+        console.log('Refresh = ' + ctrl.refreshing);
+        return refreshPromise.finally(function() {
+          ctrl.fullRefreshing = false;
+          ctrl.refreshing = false;
+          console.log('Both Refresh = ' + ctrl.refreshing);
+        });
+      }
+    }, ctrl.refreshDelay);
+    return _refreshDelayPromise;
   };
 
   ctrl.isActive = function(itemScope) {
